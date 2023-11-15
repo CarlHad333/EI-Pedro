@@ -5,6 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
+
 @SpringBootApplication
 public class EiApplication {
 
@@ -19,6 +21,20 @@ public class EiApplication {
 class HelloWorldController {
 	@GetMapping("/")
 	public String hello() {
-		return "hello world!";
+
+		String res;
+		JdbcMysqlJ8IntegrationTests j = new JdbcMysqlJ8IntegrationTests();
+		try {
+			j.setUpPool();
+			res = j.pooledConnectionTest();
+			j.dropTableIfPresent();
+
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+
+		return res;
 	}
+
+
 }
