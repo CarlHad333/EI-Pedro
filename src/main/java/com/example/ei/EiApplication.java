@@ -5,15 +5,21 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.bluetooth.*;
+import javax.microedition.io.Connector;
+import javax.microedition.io.StreamConnection;
+import javax.microedition.io.StreamConnectionNotifier;
+import java.io.*;
 import java.sql.SQLException;
 
 @SpringBootApplication
 public class EiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(EiApplication.class, args);
-	}
+	protected static final Object lock = new Object();
 
+	public static void main(String[] args) {
+			SpringApplication.run(EiApplication.class, args);
+		}
 }
 
 // Add the controller.
@@ -32,9 +38,6 @@ class HelloWorldController {
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-
 		return res;
 	}
-
-
 }
