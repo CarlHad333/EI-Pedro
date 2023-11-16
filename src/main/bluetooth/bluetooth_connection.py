@@ -1,4 +1,5 @@
 import asyncio
+import requests
 from bleak import BleakScanner
 from bleak import BleakClient
 async def main():
@@ -16,11 +17,13 @@ async def main():
     if target_address is not None:        
         async with BleakClient(target_address) as client:
             print(f"Connected: {client.is_connected}")
+            java_api_url = "https://ei-pedro-sante.appspot.com/"
                 
             while 1:
                 try:
                     data = await client.read_gatt_char(CHARACTERISTIC_UUID)
                     data = data.decode('utf-8') #convert byte to str
+                    response = requests.post(java_api_url + "sql", data=data)
                     print("data: {}".format(data))
                 except Exception:
                     pass

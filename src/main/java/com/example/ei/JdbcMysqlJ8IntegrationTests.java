@@ -27,6 +27,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -44,6 +46,10 @@ public class JdbcMysqlJ8IntegrationTests {
     private String tableName;
     private HikariDataSource connectionPool;
 
+    JdbcMysqlJ8IntegrationTests() throws SQLException {
+        setUpPool();
+    }
+
     public void setUpPool() throws SQLException {
         // Set up URL parameters
         String jdbcURL = String.format("jdbc:mysql:///%s", DB_NAME);
@@ -60,14 +66,16 @@ public class JdbcMysqlJ8IntegrationTests {
         config.setConnectionTimeout(10000); // 10s
 
         this.connectionPool = new HikariDataSource(config);
-        this.tableName = String.format("books_%s", UUID.randomUUID().toString().replace("-", ""));
+        this.tableName = "Data";
 
         // Create table
         try (Connection conn = connectionPool.getConnection()) {
-            String stmt = String.format("CREATE TABLE %s (", this.tableName)
-                    + "  ID CHAR(20) NOT NULL,"
-                    + "  TITLE TEXT NOT NULL"
-                    + ");";
+            String stmt ="CREATE TABLE IF NOT EXISTS Data (" +
+                    "id_data int not null auto_increment," +
+                    "gilevel float not null," +
+                    "time float not null," +
+                    "battery float not null," +
+                    "primary key(id_data))";
             try (PreparedStatement createTableStatement = conn.prepareStatement(stmt)) {
                 createTableStatement.execute();
             }
@@ -84,34 +92,64 @@ public class JdbcMysqlJ8IntegrationTests {
     }
 
 
-    public String pooledConnectionTest() throws SQLException {
+    public void pooledConnectionTest(String data, LocalTime time) throws SQLException {
+        String[] parts = data.split(",");
+        String gilevel = parts[0];
+        String insulin = parts[1];
         try (Connection conn = connectionPool.getConnection()) {
-            String stmt = String.format("INSERT INTO %s (ID, TITLE) VALUES (?, ?)", this.tableName);
+            String stmt = String.format("INSERT INTO %s (gilevel,insulin,time) VALUES (?, ?, ?)", this.tableName);
             try (PreparedStatement insertStmt = conn.prepareStatement(stmt)) {
-                insertStmt.setQueryTimeout(10);
-                insertStmt.setString(1, "book1");
-                insertStmt.setString(2, "Book One");
-                insertStmt.execute();
-                insertStmt.setString(1, "book2");
-                insertStmt.setString(2, "Book Two");
+                insertStmt.setInt(1, Integer.parseInt(gilevel));
+                insertStmt.setInt(2, Integer.parseInt(insulin));
+                insertStmt.setInt(3, Duration.between(time,LocalTime.now()).toMillisPart());
                 insertStmt.execute();
             }
         }
+    }
 
-        List<String> bookList = new ArrayList<>();
+    public String getGILevel() throws SQLException {
+        List<Float> gilevellist = new ArrayList<>();
         try (Connection conn = connectionPool.getConnection()) {
-            String stmt = String.format("SELECT TITLE FROM %s ORDER BY ID", this.tableName);
+            String stmt = String.format("SELECT gilevel FROM %s", this.tableName);
             try (PreparedStatement selectStmt = conn.prepareStatement(stmt)) {
-                selectStmt.setQueryTimeout(10); // 10s
+//                selectStmt.setQueryTimeout(10); // 10s
                 ResultSet rs = selectStmt.executeQuery();
                 while (rs.next()) {
-                    bookList.add(rs.getString("TITLE"));
+                    gilevellist.add(rs.getFloat("gilevel"));
                 }
             }
         }
-        assertThat(bookList).containsExactly("Book One", "Book Two");
+        return gilevellist.toString();
+    }
 
-        return bookList.toString();
+    public String getTime() throws SQLException {
+        List<Float> timelist = new ArrayList<>();
+        try (Connection conn = connectionPool.getConnection()) {
+            String stmt = String.format("SELECT time FROM %s", this.tableName);
+            try (PreparedStatement selectStmt = conn.prepareStatement(stmt)) {
+//                selectStmt.setQueryTimeout(10); // 10s
+                ResultSet rs = selectStmt.executeQuery();
+                while (rs.next()) {
+                    timelist.add(rs.getFloat("time"));
+                }
+            }
+        }
+        return timelist.toString();
+    }
+
+    public String getInsulin() throws SQLException {
+        List<Float> insulinlist = new ArrayList<>();
+        try (Connection conn = connectionPool.getConnection()) {
+            String stmt = String.format("SELECT insulin FROM %s", this.tableName);
+            try (PreparedStatement selectStmt = conn.prepareStatement(stmt)) {
+//                selectStmt.setQueryTimeout(10); // 10s
+                ResultSet rs = selectStmt.executeQuery();
+                while (rs.next()) {
+                    insulinlist.add(rs.getFloat("insulin"));
+                }
+            }
+        }
+        return insulinlist.toString();
     }
 }
 
