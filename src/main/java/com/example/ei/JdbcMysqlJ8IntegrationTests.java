@@ -20,20 +20,13 @@ package com.example.ei;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.collect.ImmutableList;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Duration;
-import java.time.LocalTime;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 
 public class JdbcMysqlJ8IntegrationTests {
@@ -74,7 +67,7 @@ public class JdbcMysqlJ8IntegrationTests {
                     "id_data int not null auto_increment," +
                     "gilevel float not null," +
                     "time float not null," +
-                    "battery float not null," +
+                    "insulin float not null," +
                     "primary key(id_data))";
             try (PreparedStatement createTableStatement = conn.prepareStatement(stmt)) {
                 createTableStatement.execute();
@@ -89,19 +82,34 @@ public class JdbcMysqlJ8IntegrationTests {
                 dropTableStatement.execute();
             }
         }
+        this.tableName = "Data";
+
+        // Create table
+        try (Connection conn = connectionPool.getConnection()) {
+            String stmt = "CREATE TABLE IF NOT EXISTS Data (" +
+                    "id_data int not null auto_increment," +
+                    "gilevel float not null," +
+                    "time float not null," +
+                    "insulin float not null," +
+                    "primary key(id_data))";
+            try (PreparedStatement createTableStatement = conn.prepareStatement(stmt)) {
+                createTableStatement.execute();
+            }
+        }
     }
 
 
-    public void pooledConnectionTest(String data, LocalTime time) throws SQLException {
+    public void pooledConnectionTest(String data, float time) throws SQLException {
         String[] parts = data.split(",");
         String gilevel = parts[0];
         String insulin = parts[1];
         try (Connection conn = connectionPool.getConnection()) {
             String stmt = String.format("INSERT INTO %s (gilevel,insulin,time) VALUES (?, ?, ?)", this.tableName);
             try (PreparedStatement insertStmt = conn.prepareStatement(stmt)) {
-                insertStmt.setInt(1, Integer.parseInt(gilevel));
-                insertStmt.setInt(2, Integer.parseInt(insulin));
-                insertStmt.setInt(3, Duration.between(time,LocalTime.now()).toMillisPart());
+                insertStmt.setFloat(1, Float.parseFloat(gilevel));
+                insertStmt.setFloat(2, Float.parseFloat(insulin));
+                insertStmt.setFloat(3,time);
+  //              insertStmt.setTimestamp(3, new java.sql.Timestamp(new java.util.Date().getTime()));
                 insertStmt.execute();
             }
         }

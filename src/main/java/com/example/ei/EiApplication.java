@@ -24,6 +24,7 @@ public class EiApplication {
 class DataController {
 
 	JdbcMysqlJ8IntegrationTests db ;
+	float i = 0;
 
 	@PostConstruct
 	public void init() throws SQLException {
@@ -34,18 +35,19 @@ class DataController {
 		}
 	}
 
-	@GetMapping(value = "delete")
-	public void deletedata() throws SQLException {
+	@GetMapping(value = "/delete")
+	public String deletedata() throws SQLException {
 		try	{
 			db.dropTableIfPresent();
 		} catch (SQLException e) {
 			System.out.println(e);
 		}
+		return "Delete Successful";
     }
 
     @PostMapping(value = "/sql")
 	public String savedata(@RequestBody String data) throws SQLException {
-		LocalTime time = LocalTime.now();
+		float time = i++;
 		try {
 			db.pooledConnectionTest(data,time);
 		} catch (SQLException e) {
@@ -66,7 +68,6 @@ class DataController {
 
 	@RequestMapping("/insulin")
 	public String sendinsulin() throws SQLException {
-		db.setUpPool();
 		return db.getInsulin();
 	}
 
