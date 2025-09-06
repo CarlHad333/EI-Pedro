@@ -1,4 +1,5 @@
 **Supervisory System | Integration Education – 2023**
+
 **Overview**
 
 This project demonstrates a rapid IoT prototype for near-real-time health monitoring. It streams simulated insulin data from an ESP32 microcontroller via Bluetooth, processes the data on Google Cloud Platform (GCP), and visualizes metrics in real time using JavaFX dashboards. MATLAB Simulink integration allows simulation-based monitoring with minimal latency.
